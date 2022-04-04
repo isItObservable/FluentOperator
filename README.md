@@ -79,7 +79,6 @@ helm install prometheus prometheus-community/kube-prometheus-stack --set server.
 ```
 
 ### 6.HipsterShop
-The hipsterShop deployment files has been customized to be deployed only on nodes having the label `workerThe hipsterShop deployment files has been customized to be deployed only on nodes having the label `worker`
 ```
 kubectl create ns hipster-shop
 kubectl -n hipster-shop create rolebinding default-view --clusterrole=view --serviceaccount=hipster-shop:default
