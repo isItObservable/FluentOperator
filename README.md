@@ -44,8 +44,8 @@ gcloud container clusters create onlineboutique \
 ```
 ### 3.Clone Github repo
 ```
-#TODO
-cd 
+git clone https://github.com/isItObservable/FluentOperator.git
+cd FluentOperator
 ```
 
 ### 4. Deploy Nginx Ingress Controller
