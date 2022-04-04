@@ -1,0 +1,168 @@
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: FluentBit
+metadata:
+  name: fluent-bit
+  namespace: kubesphere-logging-system
+  labels:
+    app.kubernetes.io/name: fluent-bit
+spec:
+  image: kubesphere/fluent-bit:v1.8.3
+  positionDB:
+    hostPath:
+      path: /var/lib/fluent-bit/
+  resources:
+    requests:
+      cpu: 10m
+      memory: 25Mi
+    limits:
+      cpu: 500m
+      memory: 200Mi
+  fluentBitConfigName: fluent-bit-config
+  tolerations:
+    - operator: Exists
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/edge
+                operator: DoesNotExist
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterFluentBitConfig
+metadata:
+  name: fluent-bit-config
+  labels:
+    app.kubernetes.io/name: fluent-bit
+spec:
+  service:
+    parsersFile: parsers.conf
+  inputSelector:
+    matchLabels:
+      fluentbit.fluent.io/enabled: "true"
+  filterSelector:
+    matchLabels:
+      fluentbit.fluent.io/enabled: "true"
+  outputSelector:
+    matchLabels:
+      fluentbit.fluent.io/enabled: "true"
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterInput
+metadata:
+  name: tail
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+    fluentbit.fluent.io/component: logging
+spec:
+  tail:
+    tag: kube.*
+    path: /var/log/containers/*.log
+    parser: docker
+    refreshIntervalSeconds: 10
+    memBufLimit: 5MB
+    skipLongLines: true
+    db: /fluent-bit/tail/pos.db
+    dbSync: Normal
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterInput
+metadata:
+  name: kubelet
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+    fluentbit.fluent.io/component: logging
+spec:
+  systemd:
+    tag: service.kubelet
+    path: /var/log/journal
+    db: /fluent-bit/tail/kubelet.db
+    dbSync: Normal
+    systemdFilter:
+      - _SYSTEMD_UNIT=kubelet.service
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterFilter
+metadata:
+  name: kubernetes
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+    fluentbit.fluent.io/component: logging
+spec:
+  match: kube.*
+  filters:
+    - kubernetes:
+        kubeURL: https://kubernetes.default.svc:443
+        kubeCAFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        kubeTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        labels: true
+        annotations: true
+    - nest:
+        operation: lift
+        nestedUnder: kubernetes
+        addPrefix: kubernetes_
+    - nest:
+        operation: lift
+        nestedUnder: kubernetes_labels
+    - modify:
+        rules:
+          - remove: stream
+          - remove: kubernetes_container_hash
+          - rename:
+              message: content
+              log: content
+              date: timestamp
+              kubernetes_pod_name : k8s.pod.name
+              kubernetes_namespace_name : k8s.namespace.name
+              kubernetes_pod_id : k8s.pod.uid
+              kubernetes_host: dt.entity.kubernetes_node
+          - add:
+              dt.kubernetes.cluster.id: a1d81911-b6bf-4f47-874a-41da3fecbc7e
+    - nest:
+        operation: nest
+        wildcard:
+          - kubernetes_*
+        nestUnder: kubernetes
+        removePrefix: kubernetes_
+    - modify:
+        rules:
+          - remove: kubernetes
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterFilter
+metadata:
+  name: kubeletfilter
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+    fluentbit.fluent.io/component: logging
+spec:
+  match: service.kubelet
+  filters:
+
+    - modify:
+        rules:
+          - rename:
+              message: content
+              log: content
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterOutput
+metadata:
+  name: fluentd-stdout-kub
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+spec:
+  stdout:
+    format: json_stream
+  match: kube.*
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterOutput
+metadata:
+  name: fluentd-stdout-kubelet
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+spec:
+  stdout:
+    format: json_stream
+  match: service.kubelet
