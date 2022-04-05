@@ -44,8 +44,8 @@ gcloud container clusters create onlineboutique \
 ```
 ### 3.Clone Github repo
 ```
-#TODO
-cd 
+git clone https://github.com/isItObservable/FluentOperator.git
+cd FluentOperator
 ```
 
 ### 4. Deploy Nginx Ingress Controller
@@ -79,7 +79,6 @@ helm install prometheus prometheus-community/kube-prometheus-stack --set server.
 ```
 
 ### 6.HipsterShop
-The hipsterShop deployment files has been customized to be deployed only on nodes having the label `workerThe hipsterShop deployment files has been customized to be deployed only on nodes having the label `worker`
 ```
 kubectl create ns hipster-shop
 kubectl -n hipster-shop create rolebinding default-view --clusterrole=view --serviceaccount=hipster-shop:default
