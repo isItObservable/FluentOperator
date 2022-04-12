@@ -7,6 +7,7 @@
       <mapping pattern="deds" type="AUTO_DETECTED" />
       <mapping pattern="rbac_node_io_stress" type="AUTO_DETECTED" />
       <mapping pattern="fluentd-configmap-stdout" type="AUTO_DETECTED" />
+      <mapping pattern="backup" type="AUTO_DETECTED" />
       <mapping pattern="chaosengine_node_io_stress" type="AUTO_DETECTED" />
       <mapping pattern="CODEOWNER" type="AUTO_DETECTED" />
       <mapping pattern="chaos_schedule_podnetworkcorruption" type="AUTO_DETECTED" />
