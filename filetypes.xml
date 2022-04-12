@@ -1,6 +1,7 @@
 <application>
   <component name="FileTypeManager" version="18">
     <extensionMap>
+      <mapping pattern="clusterfilter" type="AUTO_DETECTED" />
       <mapping pattern="test" type="AUTO_DETECTED" />
       <mapping pattern="regexpParser" type="AUTO_DETECTED" />
       <mapping pattern="deds" type="AUTO_DETECTED" />
