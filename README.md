@@ -131,6 +131,7 @@ sed -i "s,ENVIRONMENT_ID_TO_REPLACE,$ENVIRONMENT_ID," fluent/ClusterOutput_http.
 sed -i "s,ENVIRONMENT_URL_TO_REPLACE,$ENVIRONMENT_URL," dynatrace/activegate.yaml
 sed -i "s,CLUSTER_ID_TO_REPLACE,$CLUSTERID," dynatrace/activegate.yaml
 sed -i "s,API_TOKEN_TO_REPLACE,$API_TOKEN," fluent/ClusterOutput_http.yaml
+sed -e "s,CLUSTER_ID_TO_REPLACE,$CLUSTERID," fluent/clusterfilter.yaml
  ```
 ##### Deploy the activegate
  ```
@@ -141,12 +142,14 @@ kubectl apply -f dynatrace/activegate.yaml -n dynatrace
 #### Fluentbit , using the output plugin
  ```
 kubectl apply -f fluent/fluentbit_deployment.yaml -n kubesphere-logging-system
+kubectl apply -f fluent/clusterfilter.yaml  -n kubesphere-logging-system
  ```
 
 #### Fluentbit , let's add the ClusterOutput http to send the log stream to dynatrace
  ```
 kubectl apply -f fluent/ClusterOutput_http.yaml -n kubesphere-logging-system
  ```
+
 
 
 
